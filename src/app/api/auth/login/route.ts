@@ -34,6 +34,12 @@ export async function POST(request: Request) {
   });
 
   if (error) {
+    console.error("Dashboard login RPC failed", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
     return Response.json({ error: "Autentikasi dashboard gagal" }, { status: 500 });
   }
 
