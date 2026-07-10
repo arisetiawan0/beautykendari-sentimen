@@ -125,7 +125,7 @@ create or replace function verify_dashboard_user(login_username text, login_pass
 returns table(id uuid, username text, display_name text)
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   return query
