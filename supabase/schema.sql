@@ -74,11 +74,25 @@ create table job_runs (
   error_message text
 );
 
+create table dashboard_users (
+  id uuid primary key default gen_random_uuid(),
+  username text not null,
+  display_name text,
+  password_hash text not null,
+  is_active boolean not null default true,
+  last_login_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint dashboard_users_username_not_blank check (length(trim(username)) > 0),
+  constraint dashboard_users_password_hash_not_blank check (length(password_hash) > 0)
+);
+
 alter table posts enable row level security;
 alter table raw_comments enable row level security;
 alter table comments_analyzed enable row level security;
 alter table alerts enable row level security;
 alter table job_runs enable row level security;
+alter table dashboard_users enable row level security;
 
 create index posts_platform_active_idx on posts(platform, is_active, posted_at desc);
 create index raw_comments_pending_idx on raw_comments(is_processed, is_spam, scraped_at);
@@ -86,6 +100,8 @@ create index raw_comments_post_id_idx on raw_comments(post_id);
 create index comments_analyzed_sentiment_idx on comments_analyzed(sentiment, analyzed_at desc);
 create index alerts_status_idx on alerts(status, created_at desc);
 create index job_runs_job_name_idx on job_runs(job_name, started_at desc);
+create unique index dashboard_users_username_unique_idx on dashboard_users(lower(username));
+create index dashboard_users_active_idx on dashboard_users(is_active, created_at desc);
 
 create or replace function set_updated_at()
 returns trigger as $$
@@ -99,3 +115,28 @@ create trigger posts_set_updated_at
 before update on posts
 for each row
 execute function set_updated_at();
+
+create trigger dashboard_users_set_updated_at
+before update on dashboard_users
+for each row
+execute function set_updated_at();
+
+create or replace function verify_dashboard_user(login_username text, login_password text)
+returns table(id uuid, username text, display_name text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  return query
+  update dashboard_users user_row
+  set last_login_at = now()
+  where lower(user_row.username) = lower(trim(login_username))
+    and user_row.is_active = true
+    and user_row.password_hash = crypt(login_password, user_row.password_hash)
+  returning user_row.id, user_row.username, user_row.display_name;
+end;
+$$;
+
+revoke execute on function verify_dashboard_user(text, text) from public;
+grant execute on function verify_dashboard_user(text, text) to service_role;

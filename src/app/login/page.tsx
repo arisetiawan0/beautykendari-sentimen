@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { ArrowRight, Eye, EyeOff, LockKeyhole } from "lucide-react";
 
 export default function LoginPage() {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -11,7 +12,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).has("setup")) {
-      setError("Isi DASHBOARD_PASSWORD dan DASHBOARD_SESSION_SECRET pada environment server.");
+      setError("Isi Supabase env, DASHBOARD_SESSION_SECRET, lalu buat user dashboard di Supabase.");
     }
   }, []);
 
@@ -24,7 +25,7 @@ export default function LoginPage() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ username, password }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Login gagal");
@@ -57,11 +58,22 @@ export default function LoginPage() {
           <div className="login-icon"><LockKeyhole size={20} /></div>
           <p className="eyebrow">Akses internal</p>
           <h2>Masuk ke dashboard</h2>
-          <p>Gunakan password bersama tim Beauty Kendari.</p>
+          <p>Gunakan akun internal tim Beauty Kendari.</p>
 
           <form onSubmit={handleSubmit}>
+            <label htmlFor="username">Username</label>
+            <div className="credential-field">
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                autoComplete="username"
+                required
+              />
+            </div>
             <label htmlFor="password">Password dashboard</label>
-            <div className="password-field">
+            <div className="credential-field">
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}

@@ -1373,13 +1373,13 @@ button:disabled {
   font-weight: 700;
 }
 
-.password-field {
+.credential-field {
   display: flex;
   align-items: center;
   border-bottom: 1px solid var(--ink-soft);
 }
 
-.password-field input {
+.credential-field input {
   min-width: 0;
   flex: 1;
   padding: 0.85rem 0;
@@ -1387,7 +1387,7 @@ button:disabled {
   background: transparent;
 }
 
-.password-field button {
+.credential-field button {
   display: grid;
   padding: 0.5rem;
   border: 0;

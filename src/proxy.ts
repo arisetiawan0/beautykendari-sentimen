@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   DASHBOARD_SESSION_COOKIE,
   dashboardAuthConfigured,
-  dashboardSessionToken,
+  verifyDashboardSession,
 } from "@/lib/dashboard-auth";
 
 export async function proxy(request: NextRequest) {
@@ -20,9 +20,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const expected = await dashboardSessionToken();
-  const actual = request.cookies.get(DASHBOARD_SESSION_COOKIE)?.value;
-  if (actual && expected && actual === expected) return NextResponse.next();
+  const session = await verifyDashboardSession(request.cookies.get(DASHBOARD_SESSION_COOKIE)?.value);
+  if (session) return NextResponse.next();
 
   if (isApi) return Response.json({ error: "Sesi dashboard berakhir" }, { status: 401 });
 
